@@ -1,6 +1,6 @@
 // pages/api/openai.js
 import OpenAI from "openai";
-import systemPrompt from "../../prompts/systemPrompt";
+import systemPrompt from "../../prompts/daisyUI";
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 

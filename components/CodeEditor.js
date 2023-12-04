@@ -3,7 +3,7 @@ import { gradientDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 
 const CodeEditor = ({ code }) => {
   return (<div className="mockup-code">
-    <pre data-prefix="$">    <SyntaxHighlighter
+    <pre>    <SyntaxHighlighter
       language="javascript"
       style={gradientDark}
       wrapLongLines={true}

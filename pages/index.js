@@ -102,7 +102,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      {code && <CodeEditor code={code} setCode={setCode} />}
+      {code && <CodeEditor code={code} />}
       {loading && <div>Loading...</div>}
     </div>
   );

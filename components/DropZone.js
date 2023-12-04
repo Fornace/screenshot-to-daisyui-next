@@ -22,6 +22,7 @@ const DropZone = ({ setCode, setLoading, setShowOptions }) => {
       });
 
       // Set the code received from the OpenAI API response
+      console.log({openAIResponse})
       setCode(openAIResponse.data.code);
       setShowOptions(true);
     } catch (error) {

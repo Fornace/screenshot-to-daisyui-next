@@ -1,15 +1,23 @@
-// components/CodeEditor.js
-import Editor from '@monaco-editor/react'
+import { LightAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { gradientDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 
-const CodeEditor = ({ code, setCode }) => {
-  return (
-    <Editor
-      height="90vh"
-      defaultLanguage="javascript"
-      defaultValue={code}
-      onChange={setCode}
-    />
-  )
-}
+const CodeEditor = ({ code }) => {
+  return (<div className="mockup-code">
+    <pre data-prefix="$">    <SyntaxHighlighter
+      language="javascript"
+      style={gradientDark}
+      wrapLongLines={true}
+      showLineNumbers={true}
+      showInlineLineNumbers={true}
+      wrapLongLines={true}
 
-export default CodeEditor
+      lineNumberStyle={{ opacity: 0.2 }}
+    >
+      {code}
+    </SyntaxHighlighter>
+    </pre>
+  </div>
+  );
+};
+
+export default CodeEditor;

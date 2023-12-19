@@ -83,7 +83,7 @@ export default function Home() {
         </div>
         <div className="flex flex-col gap-4">
           <DropZone setCode={setCode} setLoading={setLoading} setShowOptions={setShowOptions} />
-          <div className="flex flex-col gap-2">
+          {/* <div className="flex flex-col gap-2">
             <span className="text-base-content text-opacity-40">
               Or screenshot a URL...
             </span>
@@ -99,7 +99,7 @@ export default function Home() {
                 Capture
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
       {code && <CodeEditor code={code} />}

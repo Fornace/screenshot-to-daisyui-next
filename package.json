@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.1",
+    "@heroicons/react": "^2.0.18",
     "@uiw/codemirror-theme-tokyo-night-storm": "^4.21.21",
     "@vercel/blob": "^0.15.1",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.2",
     "codemirror": "^6.0.1",
+    "copy-to-clipboard": "^3.3.3",
     "highlight.js": "^11.9.0",
     "next": "14.0.3",
     "openai": "^4.20.1",
@@ -23,6 +25,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-dropzone": "^14.2.3",
+    "react-hot-toast": "^2.4.1",
     "react-syntax-highlighter": "^15.5.0",
     "tailwindcss": "^3.3.5",
     "yarn": "^1.22.21"

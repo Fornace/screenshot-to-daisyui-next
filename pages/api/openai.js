@@ -34,6 +34,7 @@ export default async function handleStream(req, res) {
       model: 'gpt-4-vision-preview',
       stream: true,
       messages: messages,
+      max_tokens: 4096,
     });
 
     const stream = OpenAIStream(response);
@@ -45,7 +46,7 @@ export default async function handleStream(req, res) {
     console.log({error})
     if (error instanceof OpenAI.APIError) {
       const { name, status, headers, message } = error;
-      return res.json({ name, status, headers, message }, { status });
+      return res.status(status).send(({ name, status, headers, message }));
     } else {
       throw error;
     }

@@ -1,64 +1,65 @@
-// components/DropZone.js
+// /components/DropZone.js
+
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
 
-const DropZone = ({ setCode, setLoading, setShowOptions }) => {
+const DropZone = ({ setLoading, setShowOptions, setStatusText, onUploadSuccess }) => {
   const [uploadedImage, setUploadedImage] = useState(null);
+
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
     setLoading(true);
 
     try {
-      const uploadResponse = await axios.post(`/api/upload?filename=${file.name}`, file, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const uploadResponse = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: formData,
       });
 
-      const openAIResponse = await axios.post('/api/openai', {
-        imageUrl: uploadResponse.data.url,
-      });
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+      }
 
-      setCode(openAIResponse.data.code);
+      const { url: imageUrl } = await uploadResponse.json();
+      setStatusText('Analysing...');
       setShowOptions(true);
+      
+      // Trigger onUploadSuccess with an object structured to simulate an event.
+      onUploadSuccess({ target: { value: imageUrl } });
+
       setUploadedImage(URL.createObjectURL(file));
     } catch (error) {
       console.error('Error processing file:', error);
+      setStatusText('Failed to process the image. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }, [setCode, setLoading, setShowOptions]);
+  }, [setLoading, setShowOptions, setStatusText, onUploadSuccess]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.heic'],
-    },
+    accept: {'image/*': ['.jpeg', '.jpg', '.png']},
   });
-
-  if (uploadedImage) {
-    return (
-      <div className="h-64 bg-base-200 rounded-box" style={{ backgroundImage: `url(${uploadedImage})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}></div>
-    );
-  }
 
   return (
     <div {...getRootProps()} className="border-dashed border-2 border-base-300 rounded-box h-64 flex justify-center items-center cursor-pointer bg-base-200 hover:bg-base-300">
       <input {...getInputProps()} />
-      <div className="flex flex-col items-center justify-center p-4">
-        {isDragActive ? (
-          <p className="text-base-content text-opacity-40">Drop the files here...</p>
-        ) : (
-          <>
-            <p className="text-base-content text-opacity-40 text-center">Drag & drop a screenshot here, or click to upload</p>
-            <div className="mt-2">
-              <button className="btn btn-sm">Select file</button>
-            </div>
-          </>
-        )}
-      </div>
+      {
+        uploadedImage ?
+          <div style={{ backgroundImage: `url(${uploadedImage})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} className="w-full h-full rounded-box" /> :
+          <div className="flex flex-col items-center justify-center p-4">
+            {isDragActive ? (
+              <p className="text-base-content text-opacity-40">Drop the files here...</p>
+            ) : (
+              <p className="text-base-content text-opacity-40 text-center">Drag & drop a screenshot here, or click to upload</p>
+            )}
+            <button className="btn btn-sm mt-2">Select file</button>
+          </div>
+      }
     </div>
   );
 };

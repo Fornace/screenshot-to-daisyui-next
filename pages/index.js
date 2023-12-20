@@ -1,109 +1,101 @@
-// pages/index.js
-import { useState } from 'react';
+// File path: /pages/index.js
+
+import { useState, useEffect } from 'react';
 import CodeEditor from '../components/CodeEditor';
 import DropZone from '../components/DropZone';
 import Settings from '../components/Settings';
-import axios from 'axios';
+import { useCompletion } from 'ai/react';
 
 export default function Home() {
   const [openAIKey, setOpenAIKey] = useState('');
-  const [screenshotOneAPIKey, setScreenshotOneAPIKey] = useState('');
-  const [url, setUrl] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [statusText, setStatusText] = useState('Ready');
 
-  const onFileAccepted = async (file) => {
-    setLoading(true);
-    setShowOptions(false);
+  // Initialize the AI completion hook
+  const { completion, input, handleInputChange, handleSubmit, isLoading, stop } = useCompletion({ api: 'api/openai' });
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await axios.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setCode(response.data.code);
-      setShowOptions(true);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      // Handle error case here
+  useEffect(() => {
+    const savedOpenAIKey = localStorage.getItem('openAIKey');
+    if (savedOpenAIKey) {
+      setOpenAIKey(savedOpenAIKey);
     }
+  }, []);
 
-    setLoading(false);
+  useEffect(() => {
+    localStorage.setItem('openAIKey', openAIKey);
+  }, [openAIKey]);
+
+  // Handle the image URL change and submit the form
+  useEffect(() => {
+    if (input) {
+      (async () => {
+        setStatusText('Sending image to AI...');
+        await handleSubmit({ preventDefault: () => { } }); // Mock event object with preventDefault
+      })();
+    }
+  }, [input, handleSubmit]);
+
+  // Update the code when the AI completes the response
+  useEffect(() => {
+    if (completion) {
+      setCode(completion);
+      setStatusText('AI response received!');
+      console.log(completion);
+    }
+  }, [completion]);
+
+  // Function to handle a successful image upload
+  const handleUploadSuccess = (imageUrl) => {
+    setLoading(true);
+    setShowOptions(true);
+    setStatusText('AI is generating code, please wait...');
+    handleInputChange(imageUrl); // Trigger the AI completion process
   };
 
   return (
-    <div className="p-4 md:p-8 flex flex-col gap-4 md:gap-8" data-theme="dark">
-      <div className="text-3xl md:text-5xl font-bold text-white">
-        Screenshot to daisyUI
+    <div className="container mx-auto p-8 bg-base-200" data-theme="dark">
+      <div className="prose lg:prose-2xl prose-invert mb-8">
+        <h1>Screenshot to daisyUI</h1>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-        <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="flex flex-col gap-8">
           {showOptions && (
-            <>
-              <textarea
-                className="textarea textarea-bordered h-24"
-                placeholder="Tell the AI what to change..."
-              ></textarea>
-              <label className="label cursor-pointer justify-start gap-2">
-                <span className="label-text text-white">
-                  Include screenshot of current version?
-                </span>
-                <input type="checkbox" className="toggle toggle-primary" />
-              </label>
-              <div className="flex gap-2">
-                <button
-                  className="btn btn-primary gap-2"
-                  onClick={() => setCode('// Code updated...')}
-                >
-                  {/* Icon component */}
+            <div className="space-y-4">
+              <textarea className="textarea textarea-bordered w-full" placeholder="Tell the AI what to change..." value={input} onChange={(e) => handleInputChange(e.target.value)}></textarea>
+              <div className="flex gap-4">
+                <button className="btn btn-primary flex-1" onClick={() => handleSubmit({ preventDefault: () => { } })}> {/* Mock event object with preventDefault */}
                   Update
                 </button>
-                <button
-                  className="btn btn-outline gap-2"
-                  onClick={() => setCode('')}
-                >
-                  {/* Icon component */}
+                <button className="btn btn-outline flex-1" onClick={() => setCode('')}>
                   Reset
                 </button>
               </div>
-            </>
+            </div>
           )}
-          <Settings
-            openAIKey={openAIKey}
-            setOpenAIKey={setOpenAIKey}
-            screenshotOneAPIKey={screenshotOneAPIKey}
-            setScreenshotOneAPIKey={setScreenshotOneAPIKey}
+          <Settings openAIKey={openAIKey} setOpenAIKey={setOpenAIKey} />
+        </div>
+        <div>
+          <DropZone
+            setLoading={setLoading}
+            setShowOptions={setShowOptions}
+            setStatusText={setStatusText}
+            onUploadSuccess={handleUploadSuccess}
           />
         </div>
-        <div className="flex flex-col gap-4">
-          <DropZone setCode={setCode} setLoading={setLoading} setShowOptions={setShowOptions} />
-          {/* <div className="flex flex-col gap-2">
-            <span className="text-base-content text-opacity-40">
-              Or screenshot a URL...
-            </span>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter URL"
-                className="input input-bordered w-full"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <button className="btn btn-primary">
-                Capture
-              </button>
-            </div>
-          </div> */}
-        </div>
+        {isLoading &&
+          <button type="button" onClick={stop}>
+            Stop
+          </button>
+        }
       </div>
-      {code && <CodeEditor code={code} />}
-      {loading && <div>Loading...</div>}
+      <CodeEditor code={completion} />
+      {loading && (
+        <div className="toast toast-center">
+          <div className="toast-message">{statusText}</div>
+        </div>
+      )}
     </div>
   );
 }

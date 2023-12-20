@@ -1,69 +1,64 @@
-// components/CodeEditor.js
-import { LightAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { gradientDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
-import { useCallback, useState } from 'react';
-import copy from 'copy-to-clipboard';
-import { Toaster, toast } from 'react-hot-toast';
-import { ClipboardIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+// File path: /components/CodeEditor.js
+
+import React, { useState, useEffect } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { gradientDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { toast, Toaster } from 'react-hot-toast';
+import { ClipboardIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
 const CodeEditor = ({ code }) => {
-  const [showFiddle, setShowFiddle] = useState(false);
-  const [fiddleUrl, setFiddleUrl] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
-  const doOpenInJSFiddle = useCallback(async () => {
-    try {
-      const response = await axios.post('https://api.jsfiddle.net/fiddles', {
-        html: code,
-        css: '',
-        js: '',
-        panel_js: 3, // Use Babel for JavaScript
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+  const copyCode = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      toast.success('Copied to clipboard', {
+        position: 'top-right',
       });
-
-      if (response.status === 200 && response.data && response.data.fiddleHash) {
-        setFiddleUrl(`https://jsfiddle.net/${response.data.fiddleHash}/embedded/result/`);
-        setShowFiddle(true);
-      } else {
-        console.error('Failed to create JSFiddle:', response);
-      }
-    } catch (error) {
-      console.error('Error sending code to JSFiddle:', error);
-    }
-  }, [code]);
-
-  const copyCode = useCallback(() => {
-    copy(code);
-    toast.success("Copied to clipboard", {
-      position: "top-right",
+    }, () => {
+      toast.error('Failed to copy code', {
+        position: 'top-right',
+      });
     });
-  }, [code]);
+  };
+
+  const openInNewTab = () => {
+    const newWindow = window.open();
+    newWindow.document.write(code);
+    newWindow.document.close();
+  };
 
   return (
     <div className="mockup-code">
       <Toaster position="top-right" reverseOrder={false} />
-      <div className="flex justify-end mb-2">
-        <div className="join">
-          <button onClick={() => setShowFiddle(false)} className={`btn join-item ${!showFiddle ? 'btn-active' : ''}`}>
-            Code
+      <div className="flex justify-between mb-4">
+        <div className="tabs tabs-boxed">
+          <button className={`tab tab-lifted ${!showPreview ? 'tab-active' : ''}`} onClick={() => setShowPreview(false)}>Code</button>
+          <button className={`tab tab-lifted ${showPreview ? 'tab-active' : ''}`} onClick={() => setShowPreview(true)}>Preview</button>
+        </div>
+        <div className="flex">
+          <button onClick={copyCode} className="btn btn-square btn-sm">
+            <ClipboardIcon className="w-6 h-6" />
           </button>
-          <button onClick={doOpenInJSFiddle} className={`btn join-item ${showFiddle ? 'btn-active' : ''}`}>
-            Fiddle
+          <button onClick={openInNewTab} className="btn btn-square btn-sm ml-2">
+            <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
           </button>
         </div>
-        <button onClick={copyCode} className="btn btn-square btn-sm ml-2">
-          <ClipboardIcon className="w-5 h-5" />
-        </button>
       </div>
-      {showFiddle ? (
-        <iframe src={fiddleUrl} frameBorder="0" width="100%" height="300"></iframe>
+      {showPreview ? (
+        <iframe
+          title="Preview"
+          srcDoc={code}
+          frameBorder="0"
+          width="100%"
+          style={{ height: '60vh' }}
+          sandbox="allow-scripts allow-presentation allow-forms"
+        ></iframe>
       ) : (
         <SyntaxHighlighter
-          language="javascript"
+          language="html"
           style={gradientDark}
+          customStyle={{ margin: 0, borderRadius: '0.5rem' }}
+          codeTagProps={{ style: { fontFamily: 'inherit' } }}
           wrapLongLines={true}
           showLineNumbers={true}
           lineNumberStyle={{ opacity: 0.2 }}

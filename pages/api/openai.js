@@ -42,9 +42,10 @@ export default async function handleStream(req, res) {
 
   } catch (error) {
     // Check if the error is an APIError
+    console.log({error})
     if (error instanceof OpenAI.APIError) {
       const { name, status, headers, message } = error;
-      return NextResponse.json({ name, status, headers, message }, { status });
+      return res.json({ name, status, headers, message }, { status });
     } else {
       throw error;
     }
